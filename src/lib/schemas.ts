@@ -37,12 +37,18 @@ const description = z
 
 // Accepts a Date or a date string ("2026-11-16"). Allows up to 1 day in the
 // future to absorb timezone differences between browser and server.
-const reportDate = z.coerce
-  .date({ error: "Enter a valid date" })
-  .refine((d) => d.getTime() <= Date.now() + DAY_MS, "Date can't be in the future")
-  .refine(
-    (d) => d.getTime() >= Date.now() - MAX_REPORT_AGE_DAYS * DAY_MS,
-    `Date must be within the last ${MAX_REPORT_AGE_DAYS} days`,
+// Empty / null is "missing", not 1970-01-01 (which z.coerce would produce).
+const reportDate = z
+  .unknown()
+  .refine((v) => v !== undefined && v !== null && v !== "", { error: "Pick a date", abort: true })
+  .pipe(
+    z.coerce
+      .date({ error: "Enter a valid date" })
+      .refine((d) => d.getTime() <= Date.now() + DAY_MS, "Date can't be in the future")
+      .refine(
+        (d) => d.getTime() >= Date.now() - MAX_REPORT_AGE_DAYS * DAY_MS,
+        `Date must be within the last ${MAX_REPORT_AGE_DAYS} days`,
+      ),
   );
 
 const email = z.email();
@@ -50,7 +56,7 @@ const phone = z.string().regex(/^\+?[0-9\s\-()]{7,20}$/);
 
 /** Email or phone number. Trimmed; empty string treated as missing. */
 const contact = z
-  .string()
+  .string({ error: "Enter your email or phone number" })
   .transform((s) => s.trim())
   .refine((s) => email.safeParse(s).success || phone.safeParse(s).success, {
     error: "Enter a valid email or phone number",

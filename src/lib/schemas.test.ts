@@ -62,7 +62,19 @@ describe("createReportSchema", () => {
     const old = new Date(Date.now() - 120 * DAY).toISOString();
     expect(errorsOf({ ...validLost, date: future }).date).toMatch(/future/);
     expect(errorsOf({ ...validLost, date: old }).date).toMatch(/90 days/);
-    expect(errorsOf({ ...validLost, date: "not-a-date" }).date).toBeDefined();
+    expect(errorsOf({ ...validLost, date: "not-a-date" }).date).toBe("Enter a valid date");
+  });
+
+  it("says 'Pick a date' when the date is missing (not a 1970 range error)", () => {
+    expect(errorsOf({ ...validLost, date: null }).date).toBe("Pick a date");
+    expect(errorsOf({ ...validLost, date: "" }).date).toBe("Pick a date");
+    expect(errorsOf({ ...validLost, date: undefined }).date).toBe("Pick a date");
+  });
+
+  it("gives a friendly message when contact is missing", () => {
+    expect(errorsOf({ ...validLost, contact: undefined }).contact).toBe(
+      "Enter your email or phone number",
+    );
   });
 
   it("rejects too-short descriptions after cleaning", () => {
