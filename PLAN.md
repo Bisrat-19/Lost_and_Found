@@ -90,7 +90,7 @@ src/
     schemas.ts                 → zod schemas + constants (categories, colors, locations)
     matching/
       score.ts                 → scoring rules
-      tfidf.ts                 → text similarity
+      text.ts                  → tokenizing + TF-IDF similarity
       synonyms.ts              → colour + word synonym groups
       score.test.ts            → unit tests
     events.ts                  → in-memory event bus for SSE
@@ -229,13 +229,13 @@ reason**.
 | # | Step | Time |
 |---|---|---|
 | 1 | ✅ Scaffold Next.js, write README + PLAN | 10 min |
-| 2 | Docker Postgres + Prisma schema + migrate + seed | 25 min |
-| 3 | HeroUI setup + reusable components | 25 min |
-| 4 | Forms + `POST /api/reports` + zod | 25 min |
-| 5 | Matching (`score.ts`, `tfidf.ts`) + Vitest tests | 45 min |
-| 6 | Matches page + public found list | 20 min |
-| 7 | SSE bus + routes + LiveFeed context | 30 min |
-| 8 | Screenshots + finish README (AI usage, decisions) | 15 min |
+| 2 | ✅ Docker Postgres + Prisma schema + migrate + seed | 25 min |
+| 3 | ✅ HeroUI setup + reusable components | 25 min |
+| 4 | ✅ Forms + `POST /api/reports` + zod | 25 min |
+| 5 | ✅ Matching (`score.ts`, `text.ts`) + Vitest tests | 45 min |
+| 6 | ✅ Matches page + public found list | 20 min |
+| 7 | ✅ SSE bus + routes + LiveFeed context | 30 min |
+| 8 | ✅ Screenshots + finish README (AI usage, decisions) | 15 min |
 
 ---
 

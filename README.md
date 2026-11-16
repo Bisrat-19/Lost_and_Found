@@ -4,7 +4,9 @@ A small web app that helps a university match **lost** item reports with **found
 Students post reports, and the app suggests **scored, explained matches** that only the person who
 lost the item can see.
 
-> Status: in progress. See [PLAN.md](PLAN.md) for the full build plan.
+![Home page](docs/screenshots/01-home.png)
+
+Built for a software engineering assessment. The phase-by-phase build plan is in [PLAN.md](PLAN.md).
 
 ---
 
@@ -50,7 +52,7 @@ lost the item can see.
 
 ## How to run
 
-**Requirements:** Node.js 20+, Docker
+**Requirements:** Node.js (tested on 24) and Docker. Postgres runs on port **5433**, so it won't clash with a local Postgres.
 
 ```bash
 # 1. Environment
@@ -72,7 +74,7 @@ npm run dev               # http://localhost:3000
 # Reset the demo data at any time (only touches seeded rows)
 npm run db:seed
 
-# Tests (matching logic)
+# Tests: matching, validation and the live-update reducer (41 tests)
 npm test
 ```
 
@@ -183,6 +185,7 @@ Pages update without reloading. The navbar shows **● Live** while connected.
 - **Never leaks private data:** the public stream carries only public fields, with no contact details or tokens.
 - **Client state:** React Context + `useReducer` ([`src/context/`](src/context/)). It has typed actions and a pure, unit-tested reducer, the same pattern as Redux without the dependency.
 - **Limitation:** the event bus is in memory, so it works with **one server process**. Running several instances would need Postgres `LISTEN/NOTIFY` or Redis pub/sub.
+- **Limitation:** each open page holds one or two streams. Over plain HTTP/1.1 (local dev), browsers allow only 6 connections per site, so with many tabs open a stream can wait in a queue. HTTP/2, which production hosting normally uses, removes this limit.
 
 ## Assumptions
 
@@ -262,11 +265,59 @@ The brief asked for a small app, so I left these out to focus on matching and cl
 - Realtime over Redis or Postgres `LISTEN/NOTIFY` so it works across several servers.
 - Spam protection, rate limiting and automatic expiry jobs.
 
+## Known issues
+
+- In development only, the terminal sometimes shows a React Aria warning: "If you do not provide a
+  visible label…". Every field has a visible label, and I couldn't reproduce the warning in automated
+  browser runs, so its source isn't confirmed yet. It doesn't appear in production builds.
+
 ## Screenshots
 
-_To be added._
+These were taken from the running app with the seed data.
+
+| | |
+|---|---|
+| **Home:** the newest found item hangs as a claim tag | **Public found list:** no contact details |
+| ![Home](docs/screenshots/01-home.png) | ![Found items](docs/screenshots/02-found-items.png) |
+| **Report a lost item** | **Saved:** the private link is the owner's key |
+| ![Report a lost item](docs/screenshots/03-report-lost-item.png) | ![Private link](docs/screenshots/04-private-link.png) |
+| **Private matches:** score, label and reasons | **Live:** a new found item arrives while the page is open |
+| ![Matches](docs/screenshots/05-matches.png) | ![Live new match](docs/screenshots/06-live-new-match.png) |
+| **Closed with "I got it back"** | **Phone** |
+| ![Returned](docs/screenshots/07-returned.png) | ![Phone home](docs/screenshots/08-mobile-home.png) ![Phone matches](docs/screenshots/09-mobile-matches.png) |
 
 ## AI usage
 
-_To be completed._ (e.g. which parts were generated with AI, what was reviewed and changed by hand,
-and why.)
+I built this with **Claude Code** (Anthropic's coding agent) as a pair programmer, working phase by
+phase from [PLAN.md](PLAN.md) and committing after each phase.
+
+**What I decided**
+- The product shape: a public found list, private scores behind a secret link instead of accounts,
+  and a way to close a report once the item is returned.
+- The stack: Next.js for frontend and API in one app, Postgres in Docker, HeroUI components, a
+  Context + reducer store, and Server-Sent Events for live updates.
+- Scope: accounts, email notifications and AI scoring went into "Not built on purpose" and
+  "What I would build next" rather than the 3-hour build.
+- To use simple, explainable text similarity (TF-IDF) instead of an LLM API, after asking how
+  well it would work in a real system.
+
+**What Claude did**
+- Proposed the matching design and wrote most of the code, tests, seed data and this README.
+- Read the installed library docs before using them. This version of Next.js and HeroUI v3 differ
+  from older versions, for example Cache Components rules and HeroUI's new component API.
+- Tested each phase in a real browser with scripted Chrome sessions, in addition to unit tests.
+
+**What changed after review and testing.** These were caught by tests or by looking at real
+output, then fixed:
+- Scoring gave too many points for sharing just the word "bag", which is already covered by the
+  category. The text weighting was made stricter.
+- A lost student ID matched an umbrella filed as "Other" only because place and time fit. "Other"
+  now earns category points only when the descriptions overlap.
+- An empty date showed "must be within 90 days" because empty was read as a 1970 date.
+- "glasses" was stemmed to "glasse".
+- A CSS class clashed with HeroUI's own `.tag` class and broke the claim-tag layout.
+- HeroUI's date picker reads the clock while rendering, which this Next.js version blocks during
+  pre-render. It now loads in the browser only.
+
+I reviewed the decisions and the results at each phase. The weights and thresholds are judgment
+calls, explained above, and the first thing I'd tune with real data.
