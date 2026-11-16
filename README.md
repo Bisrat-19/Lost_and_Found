@@ -1,8 +1,15 @@
 # Lost & Found Matcher
 
-A small web app that helps a university match **lost** item reports with **found** item reports.
-Students post reports, and the app suggests **scored, explained matches** that only the person who
-lost the item can see.
+## What it is
+
+A small web app for a university lost-and-found. Students post two kinds of reports:
+
+- **Lost:** "I lost my black backpack near the library."
+- **Found:** "Found a dark backpack by the library entrance."
+
+The app compares every lost report with every found report, gives each pair a **score from 0 to 100**,
+and explains why they match. The person who lost the item sees their matches on a **private link**.
+No account is needed.
 
 ![Home page](docs/screenshots/01-home.png)
 
@@ -10,88 +17,79 @@ Built for a software engineering assessment. The phase-by-phase build plan is in
 
 ---
 
-## How it works (in 5 steps)
+## How to run
 
-```
- Lost something?                         Found something?
-       │                                        │
- 1. Post a LOST report                   2. Post a FOUND report
-    (category, colour, place,               (category, colour, place,
-     date, description, contact)             date, description)
-       │                                        │
-       ▼                                        ▼
- You get a PRIVATE LINK               It appears in the PUBLIC found list
- /matches/<secret-token>              (limited details, no contact info)
-       │                                        │
-       └──────────────┬─────────────────────────┘
-                      ▼
- 3. The app SCORES every lost/found pair (0–100) and explains why
-                      │
-                      ▼
- 4. Only YOU, through your private link, see your matches + scores
-    New matches appear live while the page is open (SSE)
-                      │
-                      ▼
- 5. Got it back? Click "I got it back" → your report and the matched
-    found report are closed and leave the public list
+**You need:** [Node.js](https://nodejs.org) (tested on version 24) and [Docker](https://www.docker.com) running.
+
+**Step 1: copy the settings file.** It holds the database address.
+```bash
+cp .env.example .env
 ```
 
-**In short:**
+**Step 2: start the database.** This runs Postgres in Docker on port **5433**, so it won't clash with a Postgres already on your machine.
+```bash
+docker compose up -d
+```
 
-1. **Lost an item?** Post a lost report. You get a **private link**. Save it, because it is your key.
-2. **Found an item?** Post a found report. It shows up in the **public found list** so anyone can browse it.
-3. **Matching:** the app compares your lost report to every open found report and gives each a **score
-   (0–100)** and a label: **Strong** or **Possible**, with reasons such as "same category · same area ·
-   found 1 day later".
-4. **Privacy:** scores, matches and contact details are only visible through your private link.
-   Others can see found items but not who is looking for them or how well they match.
-5. **Closing:** when you get your item back, you mark it as returned from your private link. Both
-   reports are closed and removed from the public list. Reports nobody closes expire after 60 days.
+**Step 3: install the packages.** This also generates the database client.
+```bash
+npm install
+```
+
+**Step 4: create the tables and load demo data.** The demo data includes the examples from the brief.
+```bash
+npx prisma migrate dev
+npx prisma db seed
+```
+
+**Step 5: start the app**, then open **http://localhost:3000**.
+```bash
+npm run dev
+```
+
+**Other commands**
+
+| Command | What it does |
+|---|---|
+| `npm test` | Runs the 41 unit tests (matching, validation, live updates) |
+| `npm run db:seed` | Resets the demo data. Reports you created yourself are kept |
+| `npm run db:studio` | Opens a browser view of the database |
+| `docker compose down` | Stops the database. Your data is kept |
 
 ---
 
-## How to run
+## How to use it
 
-**Requirements:** Node.js (tested on 24) and Docker. Postgres runs on port **5433**, so it won't clash with a local Postgres.
+1. **Lost something?** Click **I lost something** and fill in what it is, its colour, where and when,
+   and a description. You get a **private link**. Save it, because it is the only way back to your matches.
+2. **Found something?** Click **I found something** and fill in the same details. The item appears on
+   the public **Found items** list, without any contact details.
+3. **See your matches.** Open your private link. Each likely match shows a score, a label
+   (**Strong** or **Possible**) and the reasons, such as "same type of item" or "found 1 day later".
+   New matches appear while the page is open, without reloading.
+4. **Got it back?** Click **"This is mine, I got it back"**. Your report and the matched found item are
+   closed and leave the public list. Reports nobody closes expire after 60 days.
 
-```bash
-# 1. Environment
-cp .env.example .env
+### Try it with the demo data
 
-# 2. Start Postgres (Docker, exposed on localhost:5433)
-docker compose up -d
-
-# 3. Install dependencies (also generates the Prisma client)
-npm install
-
-# 4. Set up the database
-npx prisma migrate dev
-npx prisma db seed        # loads sample reports, including the examples from the brief
-
-# 5. Run the app
-npm run dev               # http://localhost:3000
-
-# Reset the demo data at any time (only touches seeded rows)
-npm run db:seed
-
-# Tests: matching, validation and the live-update reducer (41 tests)
-npm test
-```
-
-### Demo links (after seeding)
-
-The seed loads the examples from the brief plus a few more. Each demo lost report has a fixed private link:
+After step 4 of "How to run", each demo lost report has a fixed private link:
 
 | Lost report | Private matches link | What you'll see |
 |---|---|---|
-| Black backpack with a laptop charger (brief) | [/matches/demo-black-backpack-0001](http://localhost:3000/matches/demo-black-backpack-0001) | Strong: library-entrance backpack · Possible: football field, two weeks later |
+| Black backpack with a laptop charger (brief) | [/matches/demo-black-backpack-0001](http://localhost:3000/matches/demo-black-backpack-0001) | Strong: backpack at the library entrance. Possible: backpack at the football field two weeks later |
 | Black AirPods case (brief) | [/matches/demo-airpods-case-0002](http://localhost:3000/matches/demo-airpods-case-0002) | Strong: "dark wireless earbud case" at the coffee shop |
-| Silver keys on a red keychain | [/matches/demo-silver-keys-0003](http://localhost:3000/matches/demo-silver-keys-0003) | Strong: keys at the bus stop (same transport zone) |
+| Silver keys on a red keychain | [/matches/demo-silver-keys-0003](http://localhost:3000/matches/demo-silver-keys-0003) | Strong: keys at the bus stop (same area as the parking lot) |
 | Blue water bottle | [/matches/demo-blue-bottle-0004](http://localhost:3000/matches/demo-blue-bottle-0004) | Strong: navy bottle in the gym (blue ≈ navy) |
-| Student ID card | [/matches/demo-student-id-0005](http://localhost:3000/matches/demo-student-id-0005) | Possible: a wallet "with a student card inside" (related category) |
+| Student ID card | [/matches/demo-student-id-0005](http://localhost:3000/matches/demo-student-id-0005) | Possible: a wallet "with a student card inside" |
 | Reading glasses | [/matches/demo-returned-glasses-0006](http://localhost:3000/matches/demo-returned-glasses-0006) | Already closed with "I got it back" |
 
 Clicking **"This is mine, I got it back"** really closes the reports. Run `npm run db:seed` to reset.
+
+### Try it with your own reports
+
+1. Report a **lost** item: Phone, Black, Library, yesterday, "Black iPhone with a blue case". Open the private link in a tab.
+2. In another tab, report a **found** item: Phone, colour not sure, Library entrance, today, "Dark phone with a blue case".
+3. Your private link tab shows a new **Strong** match within a second, without reloading.
 
 ---
 
@@ -283,8 +281,10 @@ These were taken from the running app with the seed data.
 | ![Report a lost item](docs/screenshots/03-report-lost-item.png) | ![Private link](docs/screenshots/04-private-link.png) |
 | **Private matches:** score, label and reasons | **Live:** a new found item arrives while the page is open |
 | ![Matches](docs/screenshots/05-matches.png) | ![Live new match](docs/screenshots/06-live-new-match.png) |
-| **Closed with "I got it back"** | **Phone** |
-| ![Returned](docs/screenshots/07-returned.png) | ![Phone home](docs/screenshots/08-mobile-home.png) ![Phone matches](docs/screenshots/09-mobile-matches.png) |
+
+**Closed with "I got it back"**
+
+![Returned](docs/screenshots/07-returned.png)
 
 ## AI usage
 
