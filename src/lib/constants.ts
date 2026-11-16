@@ -79,6 +79,24 @@ export const LOCATION_BY_ID = Object.fromEntries(LOCATIONS.map((l) => [l.id, l])
 >;
 
 // ---------------------------------------------------------------------------
+// Match strength thresholds (score is 0–100)
+// ---------------------------------------------------------------------------
+export const STRONG_MATCH = 70;
+export const POSSIBLE_MATCH = 45;
+
+export type MatchStrength = "strong" | "possible" | "weak";
+
+export function matchStrength(score: number): MatchStrength {
+  if (score >= STRONG_MATCH) return "strong";
+  if (score >= POSSIBLE_MATCH) return "possible";
+  return "weak";
+}
+
+export function locationLabel(id: string): string {
+  return LOCATION_BY_ID[id as LocationId]?.label ?? id;
+}
+
+// ---------------------------------------------------------------------------
 // Validation limits
 // ---------------------------------------------------------------------------
 export const DESCRIPTION_MIN = 10;
