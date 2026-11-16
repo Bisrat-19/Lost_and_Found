@@ -129,6 +129,9 @@ a neutral 5 points instead of 0.
 |---|---|
 | Dark wireless earbud case beside the coffee shop, next day | **87, Strong** |
 
+These are scored as single pairs. In the running app, the description score shifts by a point or two,
+because word rarity is computed across all open reports.
+
 The football-field case is intentionally **Possible**, not hidden: it's the same kind of bag, but the
 place and time don't fit, so the app shows it with those doubts spelled out and lets a person decide.
 
@@ -166,7 +169,9 @@ place and time don't fit, so the app shows it with those doubts spelled out and 
 | **React Context + `useReducer`** (Redux pattern) | Global live state without an extra library; easy to move to Redux Toolkit |
 | **Server-Sent Events** for live reports and matches | Updates only go server→client, so SSE is simpler than WebSockets and reconnects on its own |
 | **Rule-based scoring + TF-IDF** instead of an LLM API | Free, fast, predictable and explainable |
-| **Secret link** instead of accounts | Keeps scores private with no login system |
+| **Secret link** instead of accounts | Keeps scores private with no login system. The page is `noindex` and sends no Referer, so the link doesn't leak |
+| **Finder contact shown only on Strong matches** | Otherwise anyone could post vague fake lost reports just to collect finders' emails |
+| **Matches computed on request**, not stored | Always reflects the latest reports. Fine at university scale (see "What I would build next") |
 | **Soft close (status) instead of delete** | Keeps history for auditing and for measuring match quality |
 | **zod** validation shared by client and server | One source of truth for input rules |
 

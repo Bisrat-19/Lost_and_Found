@@ -1,6 +1,7 @@
 import { Card } from "@heroui/react";
+import { Suspense } from "react";
+import { FoundList, FoundListSkeleton } from "@/components/reports/FoundList";
 import { ButtonLink } from "@/components/ui/ButtonLink";
-import { EmptyState } from "@/components/ui/EmptyState";
 
 const STEPS = [
   { title: "1. Report", text: "Lost or found something? Post a short report with where and when." },
@@ -47,17 +48,15 @@ export default function Home() {
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-semibold">Recently found</h2>
-        {/* Wired to real data in Phase 7 */}
-        <EmptyState
-          title="No found items yet"
-          description="Found something? Help it get back to its owner."
-          action={
-            <ButtonLink href="/found/new" variant="outline" size="sm">
-              Report a found item
-            </ButtonLink>
-          }
-        />
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-xl font-semibold">Recently found</h2>
+          <ButtonLink href="/found" variant="ghost" size="sm">
+            See all
+          </ButtonLink>
+        </div>
+        <Suspense fallback={<FoundListSkeleton count={2} />}>
+          <FoundList limit={4} />
+        </Suspense>
       </section>
     </div>
   );
