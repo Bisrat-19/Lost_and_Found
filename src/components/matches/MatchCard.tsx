@@ -2,9 +2,13 @@ import { ReportCard } from "@/components/reports/ReportCard";
 import { ScoreBadge } from "@/components/ui/ScoreBadge";
 import type { MatchView } from "@/lib/queries";
 import { MatchReasons } from "./MatchReasons";
+import { ResolveButton } from "./ResolveButton";
 
-/** A found report shown as a match: score badge + reasons + (strong only) how to reach the finder. */
-export function MatchCard({ view }: { view: MatchView }) {
+/**
+ * A found report shown as a match: score badge + reasons + (strong only) how to
+ * reach the finder. Pass `token` to show the "this is mine" button.
+ */
+export function MatchCard({ view, token }: { view: MatchView; token?: string }) {
   const { match, found, finderContact } = view;
   return (
     <ReportCard
@@ -24,6 +28,9 @@ export function MatchCard({ view }: { view: MatchView }) {
                 <>The finder left no contact. Ask at the campus lost &amp; found office.</>
               )}
             </p>
+          ) : null}
+          {token && match.strength !== "weak" ? (
+            <ResolveButton token={token} foundId={found.id} label="This is mine, I got it back" />
           ) : null}
         </div>
       }

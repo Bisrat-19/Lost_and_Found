@@ -122,6 +122,24 @@ describe("hard rules", () => {
     expect(m.score).toBeGreaterThanOrEqual(POSSIBLE_MATCH);
   });
 
+  it("'Other' with nothing in common doesn't match just because place and time fit", () => {
+    // Real case from the seed data: lost student ID vs. an umbrella in the same hall
+    const lost = report({ category: "ID_CARD", color: null, location: "main-hall", description: "Student ID card in a clear plastic holder." });
+    const found = report({ category: "OTHER", color: "black", location: "main-hall", date: daysAfter(2), description: "Black folding umbrella left under a seat after the morning lecture." });
+    const m = scorePair(lost, found)!;
+    expect(m.strength).toBe("weak");
+    expect(m.reasons[0].text).toMatch(/nothing in common/);
+  });
+
+  it("'Other' still gets partial category credit when the descriptions overlap", () => {
+    const lost = report({ category: "OTHER", description: "reading glasses in a hard case" });
+    const found = report({ category: "OTHER", description: "glasses case" });
+    const lostOther = report({ category: "OTHER", description: "reading glasses in a hard case" });
+    const foundSpecific = report({ category: "CLOTHING", description: "glasses case clipped to a jacket" });
+    expect(scorePair(lost, found)!.reasons[0].points).toBe(WEIGHTS.category); // both Other = same
+    expect(scorePair(lostOther, foundSpecific)!.reasons[0].points).toBe(10);
+  });
+
   it("score stays within 0–100 and points never exceed their max", () => {
     const a = report({ color: "red", description: "red bag" });
     const m = scorePair(a, { ...a, id: "copy" })!;

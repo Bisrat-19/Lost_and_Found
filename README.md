@@ -69,9 +69,27 @@ npx prisma db seed        # loads sample reports, including the examples from th
 # 5. Run the app
 npm run dev               # http://localhost:3000
 
+# Reset the demo data at any time (only touches seeded rows)
+npm run db:seed
+
 # Tests (matching logic)
 npm test
 ```
+
+### Demo links (after seeding)
+
+The seed loads the examples from the brief plus a few more. Each demo lost report has a fixed private link:
+
+| Lost report | Private matches link | What you'll see |
+|---|---|---|
+| Black backpack with a laptop charger (brief) | [/matches/demo-black-backpack-0001](http://localhost:3000/matches/demo-black-backpack-0001) | Strong: library-entrance backpack · Possible: football field, two weeks later |
+| Black AirPods case (brief) | [/matches/demo-airpods-case-0002](http://localhost:3000/matches/demo-airpods-case-0002) | Strong: "dark wireless earbud case" at the coffee shop |
+| Silver keys on a red keychain | [/matches/demo-silver-keys-0003](http://localhost:3000/matches/demo-silver-keys-0003) | Strong: keys at the bus stop (same transport zone) |
+| Blue water bottle | [/matches/demo-blue-bottle-0004](http://localhost:3000/matches/demo-blue-bottle-0004) | Strong: navy bottle in the gym (blue ≈ navy) |
+| Student ID card | [/matches/demo-student-id-0005](http://localhost:3000/matches/demo-student-id-0005) | Possible: a wallet "with a student card inside" (related category) |
+| Reading glasses | [/matches/demo-returned-glasses-0006](http://localhost:3000/matches/demo-returned-glasses-0006) | Already closed with "I got it back" |
+
+Clicking **"This is mine, I got it back"** really closes the reports. Run `npm run db:seed` to reset.
 
 ---
 
@@ -93,7 +111,7 @@ reason**, shown to the user, so a person can check why two reports matched.
 
 | Signal | Max | Full points | Partial points | Zero |
 |---|---|---|---|---|
-| Category | 30 | Same type | Related types (wallet ↔ ID card) = 12; one is "Other" = 10 | Unrelated |
+| Category | 30 | Same type | Related types (wallet ↔ ID card) = 15; one is "Other" **and** descriptions overlap = 10 | Unrelated, or "Other" with nothing in common |
 | Description | 25 | TF-IDF cosine ≥ 0.8 | Scaled below that | No key words shared |
 | Colour | 15 | Same colour | Similar (black ≈ navy ≈ "dark") = 10; unknown = 5 | Different |
 | Location | 15 | Same place | Same campus zone (library ≈ library entrance) = 10; unknown = 5 | Different zone |

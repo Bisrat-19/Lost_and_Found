@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { Skeleton } from "@heroui/react";
+import { Alert, Skeleton } from "@heroui/react";
 import { MatchCard } from "@/components/matches/MatchCard";
+import { ResolveButton } from "@/components/matches/ResolveButton";
 import { ReportCard } from "@/components/reports/ReportCard";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { CATEGORY_LABELS } from "@/lib/constants";
-import { getLostByToken, getMatchesForLost } from "@/lib/queries";
+import { CATEGORY_LABELS, REPORT_EXPIRY_DAYS } from "@/lib/constants";
+import { getLostByToken, getMatchesForLost, isExpired } from "@/lib/queries";
 import { toPublicReport } from "@/lib/reports";
 
 export const metadata: Metadata = {
@@ -35,6 +36,9 @@ async function Matches({ params, searchParams }: PageProps<"/matches/[token]">) 
   const lost = await getLostByToken(token);
   if (!lost) notFound();
 
+  if (lost.status === "RESOLVED") return <ResolvedView lost={lost} />;
+  if (isExpired(lost)) return <ExpiredView lost={lost} />;
+
   const { shown, hiddenWeakCount } = await getMatchesForLost(lost, { includeWeak });
   const strong = shown.filter((v) => v.match.strength === "strong").length;
 
@@ -54,7 +58,17 @@ async function Matches({ params, searchParams }: PageProps<"/matches/[token]">) 
 
       <section className="flex flex-col gap-3">
         <h2 className="text-muted text-sm font-medium uppercase tracking-wide">Your report</h2>
-        <ReportCard report={toPublicReport(lost)} />
+        <ReportCard
+          report={toPublicReport(lost)}
+          footer={
+            <ResolveButton
+              token={token}
+              foundId={null}
+              label="I got it back another way"
+              variant="ghost"
+            />
+          }
+        />
       </section>
 
       <section className="flex flex-col gap-4">
@@ -70,7 +84,7 @@ async function Matches({ params, searchParams }: PageProps<"/matches/[token]">) 
             }
           />
         ) : (
-          shown.map((view) => <MatchCard key={view.found.id} view={view} />)
+          shown.map((view) => <MatchCard key={view.found.id} view={view} token={token} />)
         )}
 
         {hiddenWeakCount > 0 && !includeWeak ? (
@@ -84,6 +98,59 @@ async function Matches({ params, searchParams }: PageProps<"/matches/[token]">) 
           </ButtonLink>
         ) : null}
       </section>
+    </div>
+  );
+}
+
+type LostWithResolution = NonNullable<Awaited<ReturnType<typeof getLostByToken>>>;
+
+const dateFmt = new Intl.DateTimeFormat("en", { dateStyle: "medium" });
+
+function ResolvedView({ lost }: { lost: LostWithResolution }) {
+  return (
+    <div className="flex flex-col gap-6">
+      <Alert status="success">
+        <Alert.Indicator />
+        <Alert.Content>
+          <Alert.Title>You got it back. This report is closed</Alert.Title>
+          <Alert.Description>
+            Marked as returned{lost.resolvedAt ? ` on ${dateFmt.format(lost.resolvedAt)}` : ""}.
+            It no longer appears in matching
+            {lost.resolvedWith ? ", and the matched found item was removed from the public list" : ""}.
+          </Alert.Description>
+        </Alert.Content>
+      </Alert>
+      <section className="flex flex-col gap-3">
+        <h2 className="text-muted text-sm font-medium uppercase tracking-wide">Your report</h2>
+        <ReportCard report={toPublicReport(lost)} />
+      </section>
+      {lost.resolvedWith ? (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-muted text-sm font-medium uppercase tracking-wide">Returned item</h2>
+          <ReportCard report={toPublicReport(lost.resolvedWith)} />
+        </section>
+      ) : null}
+    </div>
+  );
+}
+
+function ExpiredView({ lost }: { lost: LostWithResolution }) {
+  return (
+    <div className="flex flex-col gap-6">
+      <Alert status="warning">
+        <Alert.Indicator />
+        <Alert.Content>
+          <Alert.Title>This report has expired</Alert.Title>
+          <Alert.Description>
+            Reports close automatically after {REPORT_EXPIRY_DAYS} days. If you&apos;re still looking,
+            please report the item again.
+          </Alert.Description>
+        </Alert.Content>
+      </Alert>
+      <ReportCard report={toPublicReport(lost)} />
+      <ButtonLink href="/lost/new" className="self-start">
+        Report it again
+      </ButtonLink>
     </div>
   );
 }

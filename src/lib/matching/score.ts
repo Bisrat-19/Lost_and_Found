@@ -80,16 +80,28 @@ function isRelatedCategory(a: Category, b: Category): boolean {
   return RELATED_CATEGORIES.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
 }
 
-export function categorySignal(lost: Category, found: Category): Reason & { unrelated: boolean } {
+/**
+ * @param descriptionsOverlap whether the descriptions share any key word. An
+ *   "Other" report only earns category points when the text backs it up;
+ *   otherwise "Other" would partly match everything found nearby.
+ */
+export function categorySignal(
+  lost: Category,
+  found: Category,
+  descriptionsOverlap = true,
+): Reason & { unrelated: boolean } {
   const max = WEIGHTS.category;
   if (lost === found) {
     return { signal: "category", points: max, max, tone: "positive", unrelated: false, text: `Same type of item: ${CATEGORY_LABELS[lost]}` };
   }
   if (lost === "OTHER" || found === "OTHER") {
+    if (!descriptionsOverlap) {
+      return { signal: "category", points: 0, max, tone: "negative", unrelated: true, text: `One report is "Other" and the descriptions have nothing in common` };
+    }
     return { signal: "category", points: Math.round(max / 3), max, tone: "neutral", unrelated: false, text: `One report is "Other", so we rely on the description` };
   }
   if (isRelatedCategory(lost, found)) {
-    return { signal: "category", points: Math.round(max * 0.4), max, tone: "neutral", unrelated: false, text: `Related types: ${CATEGORY_LABELS[lost]} vs ${CATEGORY_LABELS[found]}` };
+    return { signal: "category", points: Math.round(max * 0.5), max, tone: "neutral", unrelated: false, text: `Related types: ${CATEGORY_LABELS[lost]} vs ${CATEGORY_LABELS[found]}` };
   }
   return { signal: "category", points: 0, max, tone: "negative", unrelated: true, text: `Different type of item: ${CATEGORY_LABELS[lost]} vs ${CATEGORY_LABELS[found]}` };
 }
@@ -198,7 +210,8 @@ export function scorePair(lost: MatchableReport, found: MatchableReport, idf?: I
   const foundTokens = tokenize(found.description);
   const corpusIdf = idf ?? buildIdf([lostTokens, foundTokens]);
 
-  const category = categorySignal(lost.category, found.category);
+  const overlap = sharedTerms(lostTokens, foundTokens).length > 0;
+  const category = categorySignal(lost.category, found.category, overlap);
   const reasons: Reason[] = [
     { signal: category.signal, points: category.points, max: category.max, tone: category.tone, text: category.text },
     textSignal(lostTokens, foundTokens, corpusIdf),

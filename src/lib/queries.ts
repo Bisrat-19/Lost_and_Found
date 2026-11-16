@@ -37,9 +37,14 @@ export async function getOpenFoundReports(limit?: number): Promise<PublicReport[
 }
 
 /** The lost report behind a private link, or null for an unknown/malformed token. */
-export async function getLostByToken(token: string): Promise<Report | null> {
+export async function getLostByToken(token: string) {
   if (!tokenSchema.safeParse(token).success) return null;
-  return db.report.findFirst({ where: { token, type: "LOST" } });
+  return db.report.findFirst({ where: { token, type: "LOST" }, include: { resolvedWith: true } });
+}
+
+/** OPEN reports older than REPORT_EXPIRY_DAYS count as expired (checked at read time, no cron). */
+export function isExpired(r: Pick<Report, "status" | "createdAt">): boolean {
+  return r.status === "EXPIRED" || (r.status === "OPEN" && r.createdAt < expiryCutoff());
 }
 
 export type MatchView = {
