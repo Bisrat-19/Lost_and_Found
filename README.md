@@ -319,5 +319,3 @@ output, then fixed:
 - HeroUI's date picker reads the clock while rendering, which this Next.js version blocks during
   pre-render. It now loads in the browser only.
 
-I reviewed the decisions and the results at each phase. The weights and thresholds are judgment
-calls, explained above, and the first thing I'd tune with real data.
