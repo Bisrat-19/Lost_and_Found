@@ -53,18 +53,20 @@ lost the item can see.
 **Requirements:** Node.js 20+, Docker
 
 ```bash
-# 1. Start Postgres
+# 1. Environment
+cp .env.example .env
+
+# 2. Start Postgres (Docker, exposed on localhost:5433)
 docker compose up -d
 
-# 2. Install dependencies
+# 3. Install dependencies (also generates the Prisma client)
 npm install
 
-# 3. Set up the database
-cp .env.example .env
+# 4. Set up the database
 npx prisma migrate dev
 npx prisma db seed        # loads sample reports, including the examples from the brief
 
-# 4. Run the app
+# 5. Run the app
 npm run dev               # http://localhost:3000
 
 # Tests (matching logic)

@@ -1,0 +1,61 @@
+// Lost & Found Matcher: data model
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ReportType {
+  LOST
+  FOUND
+}
+
+enum Category {
+  BAG
+  PHONE
+  EARBUDS
+  LAPTOP
+  KEYS
+  WALLET
+  ID_CARD
+  BOTTLE
+  CLOTHING
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  EXPIRED
+}
+
+model Report {
+  id          String       @id @default(cuid())
+  type        ReportType
+  category    Category
+  color       String? // from a fixed list; null = "I don't know"
+  location    String // from a fixed list of campus places
+  date        DateTime // when the item was lost / found
+  description String
+  contact     String? // lost reports only, never shown publicly
+  token       String?      @unique // lost reports only: secret link to view matches
+  status      ReportStatus @default(OPEN)
+
+  // Set when the owner clicks "I got it back"
+  resolvedAt     DateTime?
+  resolvedWithId String? // the found report the owner picked
+  resolvedWith   Report?   @relation("ResolvedWith", fields: [resolvedWithId], references: [id])
+  resolvedFor    Report[]  @relation("ResolvedWith")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Matching always filters by type + status, often by category
+  @@index([type, status, category])
+  @@index([type, status, date])
+}
