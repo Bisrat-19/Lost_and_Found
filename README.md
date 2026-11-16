@@ -86,22 +86,51 @@ makes the final call. I kept the build small and put the effort into three thing
 
 ## How matching works
 
-Each lost/found pair gets a score from 0 to 100:
+Code: [`src/lib/matching/`](src/lib/matching/). These are pure functions with no database, covered by unit tests.
 
-| Signal | Weight | Notes |
-|---|---|---|
-| Category | 30 | Same category, or partial points for related categories |
-| Description similarity | 25 | TF-IDF + cosine similarity, with stop-words removed and synonyms normalised (AirPods ≈ earbuds) |
-| Colour | 15 | Exact or similar colour group (black ≈ dark); neutral if unknown |
-| Location | 15 | Same place, or partial points for the same campus zone |
-| Time | 15 | Highest when found soon after the loss, fading to 0 by 14 days |
+Each lost/found pair gets a score from 0 to 100, made of five signals. **Every signal also produces a
+reason**, shown to the user, so a person can check why two reports matched.
 
-- **Excluded:** found date before lost date (1-day grace), and closed reports.
-- **Labels:** ≥ 70 Strong, 45–69 Possible, below that hidden by default.
+| Signal | Max | Full points | Partial points | Zero |
+|---|---|---|---|---|
+| Category | 30 | Same type | Related types (wallet ↔ ID card) = 12; one is "Other" = 10 | Unrelated |
+| Description | 25 | TF-IDF cosine ≥ 0.8 | Scaled below that | No key words shared |
+| Colour | 15 | Same colour | Similar (black ≈ navy ≈ "dark") = 10; unknown = 5 | Different |
+| Location | 15 | Same place | Same campus zone (library ≈ library entrance) = 10; unknown = 5 | Different zone |
+| Time | 15 | Found 0–3 days after the loss | Fades linearly from day 3 to day 14 | 14+ days |
 
-Using the brief's example, a dark backpack found near the library entrance the same evening scores as a
-**Strong** match. A black backpack found at the football field two weeks later is a **Possible**
-match, flagged with "different area, 2 weeks later" so a human can judge.
+**Description similarity (TF-IDF).** Each description is turned into keywords:
+1. Remove filler words. Also remove colour, time and place words, because those already have their own signals and would otherwise be counted twice.
+2. Remove plurals (backpacks → backpack).
+3. Map synonyms to one word (AirPods / earphones → *earbud*, backpack / rucksack → *bag*).
+4. Weight words by how rare they are across all open reports. Sharing "charger" counts more than sharing "bag".
+
+**Missing information is neutral, not negative.** If the colour field is empty, the matcher looks for a
+colour word in the description ("dark-colored backpack" → *dark*). If there is none, both reports get
+a neutral 5 points instead of 0.
+
+**Hard rules**
+- Found more than 1 day **before** the loss → not a match. One day is allowed for date mistakes.
+- **Unrelated categories are capped at 30**, so a black phone never matches a black bag just because colour, place and time agree.
+- Closed and expired reports are never matched.
+
+**Labels:** ≥ 70 **Strong**, 45–69 **Possible**, below 45 hidden.
+
+**The brief's examples, as scored by the app** (also unit tests):
+
+| Lost: *black backpack with a laptop charger, library, Monday* vs. found... | Score |
+|---|---|
+| Dark-colored backpack near the library entrance, Monday evening | **79, Strong** |
+| Black backpack at the football field, two weeks later | **59, Possible**, flagged "different area" and "14 days later" |
+| Black backpack with a laptop charger inside, library, next day | **100, Strong** |
+| Black phone in the library, same day | **30, hidden** (different type of item) |
+
+| Lost: *black AirPods case near the cafeteria* vs. found... | Score |
+|---|---|
+| Dark wireless earbud case beside the coffee shop, next day | **87, Strong** |
+
+The football-field case is intentionally **Possible**, not hidden: it's the same kind of bag, but the
+place and time don't fit, so the app shows it with those doubts spelled out and lets a person decide.
 
 ## Report lifecycle (how we know an item was returned)
 
