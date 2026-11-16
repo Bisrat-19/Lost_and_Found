@@ -1,3 +1,5 @@
+import { after } from "next/server";
+import { notifyReportCreated } from "@/lib/notify";
 import { createReport, toPublicReport } from "@/lib/reports";
 import { createReportSchema, toFieldErrors } from "@/lib/schemas";
 
@@ -23,6 +25,10 @@ export async function POST(request: Request) {
 
   try {
     const report = await createReport(parsed.data);
+    // Push live updates after the response is sent, so posting never waits on them
+    after(() =>
+      notifyReportCreated(report).catch((err) => console.error("Live notify failed", err)),
+    );
     return Response.json(
       {
         report: toPublicReport(report),

@@ -168,6 +168,22 @@ place and time don't fit, so the app shows it with those doubts spelled out and 
 - Closed reports are **kept in the database, not deleted**, so they could be used later to measure
   how well matching works.
 
+## Live updates (Server-Sent Events)
+
+Pages update without reloading. The navbar shows **● Live** while connected.
+
+| Stream | Who | Events |
+|---|---|---|
+| `GET /api/events` | Everyone (opened app-wide in the layout) | `report.created` (new found item), `report.resolved` (item returned) |
+| `GET /api/events/:token` | The owner, on their private matches page | the public events plus `match.found` (a new Strong/Possible match) and `lost.resolved` |
+
+- **What updates live:** the found list shows new items at the top with a "New" badge, and returned items disappear. The matches page shows new matches with a toast and switches to the "closed" view if the report is closed from another tab or device.
+- **Same numbers as a reload:** a pushed match is scored by the same function the page uses.
+- **Never slows down posting:** notifications run after the response is sent (`after()`).
+- **Never leaks private data:** the public stream carries only public fields, with no contact details or tokens.
+- **Client state:** React Context + `useReducer` ([`src/context/`](src/context/)). It has typed actions and a pure, unit-tested reducer, the same pattern as Redux without the dependency.
+- **Limitation:** the event bus is in memory, so it works with **one server process**. Running several instances would need Postgres `LISTEN/NOTIFY` or Redis pub/sub.
+
 ## Assumptions
 
 - One university with a fixed list of campus locations.

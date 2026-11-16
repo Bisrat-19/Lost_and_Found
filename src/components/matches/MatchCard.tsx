@@ -1,6 +1,6 @@
 import { ReportCard } from "@/components/reports/ReportCard";
 import { ScoreBadge } from "@/components/ui/ScoreBadge";
-import type { MatchView } from "@/lib/queries";
+import type { MatchView } from "@/lib/types";
 import { MatchReasons } from "./MatchReasons";
 import { ResolveButton } from "./ResolveButton";
 

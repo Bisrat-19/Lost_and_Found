@@ -2,11 +2,10 @@ import "server-only";
 import type { Report } from "@/generated/prisma/client";
 import { REPORT_EXPIRY_DAYS } from "./constants";
 import { db } from "./db";
-import { matchesForLost, type MatchableReport, type MatchResult } from "./matching/score";
-import { DATE_GRACE_DAYS } from "./matching/score";
+import { DATE_GRACE_DAYS, matchesForLost, type MatchableReport } from "./matching/score";
 import { toPublicReport } from "./reports";
 import { tokenSchema } from "./schemas";
-import type { PublicReport } from "./types";
+import type { MatchView, PublicReport } from "./types";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -47,12 +46,7 @@ export function isExpired(r: Pick<Report, "status" | "createdAt">): boolean {
   return r.status === "EXPIRED" || (r.status === "OPEN" && r.createdAt < expiryCutoff());
 }
 
-export type MatchView = {
-  match: MatchResult;
-  found: PublicReport;
-  /** Finder's contact. Only revealed for strong matches (see README: privacy). */
-  finderContact: string | null;
-};
+export type { MatchView };
 
 export type MatchesForLost = {
   shown: MatchView[];

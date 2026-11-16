@@ -1,4 +1,6 @@
+import { after } from "next/server";
 import { z } from "zod";
+import { notifyResolved } from "@/lib/notify";
 import { resolveLostReport } from "@/lib/resolve";
 
 const bodySchema = z.object({
@@ -26,6 +28,7 @@ export async function POST(request: Request, ctx: RouteContext<"/api/reports/[to
   try {
     const result = await resolveLostReport(token, parsed.data.foundId);
     if (!result.ok) return Response.json({ error: result.error }, { status: result.status });
+    after(() => notifyResolved(result.lostId, result.foundId));
     return Response.json({ ok: true, foundId: result.foundId });
   } catch (err) {
     console.error("Failed to resolve report", err);
