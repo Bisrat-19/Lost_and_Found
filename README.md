@@ -208,6 +208,7 @@ Pages update without reloading. The navbar shows **● Live** while connected.
 | **Matches computed on request**, not stored | Always reflects the latest reports. Fine at university scale (see "What I would build next") |
 | **Soft close (status) instead of delete** | Keeps history for auditing and for measuring match quality |
 | **zod** validation shared by client and server | One source of truth for input rules |
+| **"Claim tag" visual design** | Every report is drawn as a paper claim tag: manila for found, raspberry for lost, with the date on a perforated stub. Lost and found look different at a glance, and the theme comes from the real lost-and-found office. One typeface (Archivo, expanded for headings) and a navy/manila palette, set through HeroUI's theme tokens |
 
 ## Not built on purpose
 

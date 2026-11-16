@@ -1,7 +1,182 @@
 @import "tailwindcss";
 @import "@heroui/styles";
 
+/* ---------------------------------------------------------------------------
+   Theme: campus lost-and-found office.
+   Found items are manila claim tags; lost reports are raspberry tags.
+   HeroUI's defaults live in @layer base, so this unlayered :root wins.
+   --------------------------------------------------------------------------- */
+:root {
+  /* Palette */
+  --ink: #1e2b4f;
+  --ink-soft: #2c3d6b;
+  --mist: #e9eef3;
+  --manila: #ebd394;
+  --manila-deep: #dfc176;
+  --twine: #8a6a2f;
+  --raspberry: #b4235a;
+  --raspberry-pale: #f7dde6;
+  --teal: #0e7c6b;
+
+  /* HeroUI tokens */
+  --background: var(--mist);
+  --foreground: var(--ink);
+  --surface: #ffffff;
+  --surface-foreground: var(--ink);
+  --muted: #56617a;
+  --border: #cfd7e2;
+  --separator: #cfd7e2;
+  --focus: var(--ink);
+  --link: var(--ink);
+  --radius: 0.625rem;
+  --field-radius: 0.75rem;
+  --field-border-focus: var(--ink);
+
+  --accent: var(--ink);
+  --accent-foreground: #ffffff;
+  --accent-hover: var(--ink-soft);
+  --accent-soft: #d8dfeb;
+  --accent-soft-foreground: var(--ink);
+  --accent-soft-hover: #cbd4e4;
+
+  --success: var(--teal);
+  --success-foreground: #ffffff;
+  --success-soft: #d2ece6;
+  --success-soft-foreground: #0a5c50;
+
+  --warning: #b7791f;
+  --warning-soft: #f6e4bf;
+  --warning-soft-foreground: #6f450b;
+
+  --danger: var(--raspberry);
+  --danger-foreground: #ffffff;
+  --danger-soft: var(--raspberry-pale);
+  --danger-soft-foreground: #8b1a45;
+}
+
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --color-ink: var(--ink);
+  --color-manila: var(--manila);
+  --color-twine: var(--twine);
+  --color-raspberry: var(--raspberry);
+  --color-teal: var(--teal);
+}
+
+body {
+  font-feature-settings: "ss01", "tnum";
+}
+
+/* Stamped-label headline: Archivo at its widest, heavy, tight. */
+.font-display {
+  font-family: var(--font-archivo);
+  font-stretch: 125%;
+  font-variation-settings: "wdth" 125;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 1.02;
+}
+
+/* ---------------------------------------------------------------------------
+   Claim tag: a stub with a punched hole and the date, a perforation, and the
+   body. Used for every report so lost/found read as physical objects.
+   --------------------------------------------------------------------------- */
+.claim-tag {
+  --tag-bg: var(--manila);
+  --tag-edge: var(--manila-deep);
+  --tag-ink: var(--twine);
+  position: relative;
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  background: var(--tag-bg);
+  border-radius: 0.75rem 1.25rem 1.25rem 0.75rem;
+  box-shadow:
+    inset 0 0 0 1px var(--tag-edge),
+    0 10px 20px -16px rgb(30 43 79 / 0.55);
+}
+.claim-tag[data-kind="lost"] {
+  --tag-bg: var(--raspberry-pale);
+  --tag-edge: #ecbccd;
+  --tag-ink: var(--raspberry);
+}
+
+/* Punched hole with a reinforcement ring */
+.claim-tag::before {
+  content: "";
+  position: absolute;
+  left: 1.6rem;
+  top: 1.1rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 999px;
+  background: var(--background);
+  box-shadow:
+    0 0 0 3px color-mix(in oklab, var(--tag-ink) 28%, transparent),
+    inset 0 1px 2px rgb(0 0 0 / 0.18);
+}
+
+.claim-tag-stub {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 2.9rem 0.25rem 1rem;
+  border-right: 2px dashed color-mix(in oklab, var(--tag-ink) 45%, transparent);
+  color: var(--tag-ink);
+  text-align: center;
+}
+.claim-tag-stub-day {
+  font-stretch: 125%;
+  font-variation-settings: "wdth" 125;
+  font-weight: 800;
+  font-size: 1.75rem;
+  line-height: 1;
+  color: var(--ink);
+}
+.claim-tag-stub-month {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.claim-tag-stub-kind {
+  margin-top: auto;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.claim-tag-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 1rem 1.15rem 1.1rem;
+}
+.claim-tag-divider {
+  border-top: 1.5px dashed color-mix(in oklab, var(--tag-ink) 35%, transparent);
+}
+
+/* The one orchestrated motion: the hero tag swings on its hole when the page loads. */
+.claim-tag-swing {
+  transform-origin: 2.1rem 1.6rem;
+  animation: claim-tag-swing 1.4s cubic-bezier(0.2, 0.9, 0.25, 1) both;
+  rotate: -4deg;
+}
+@keyframes claim-tag-swing {
+  0% {
+    rotate: 14deg;
+  }
+  45% {
+    rotate: -9deg;
+  }
+  75% {
+    rotate: -2deg;
+  }
+  100% {
+    rotate: -4deg;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .claim-tag-swing {
+    animation: none;
+  }
 }

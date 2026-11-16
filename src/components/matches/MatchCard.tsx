@@ -18,7 +18,7 @@ export function MatchCard({ view, token }: { view: MatchView; token?: string }) 
         <div className="flex w-full flex-col gap-3">
           <MatchReasons reasons={match.reasons} />
           {match.strength === "strong" ? (
-            <p className="bg-default/40 rounded-lg px-3 py-2 text-sm">
+            <p className="rounded-lg bg-white/65 px-3 py-2 text-sm">
               {finderContact ? (
                 <>
                   Contact the finder: <span className="font-medium">{finderContact}</span>. Be ready

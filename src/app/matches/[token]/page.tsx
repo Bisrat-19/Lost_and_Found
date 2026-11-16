@@ -46,7 +46,7 @@ async function Matches({ params, searchParams }: PageProps<"/matches/[token]">) 
     <LiveFeedProvider token={token}>
       <div className="flex flex-col gap-8">
         <header className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <h1 className="font-display text-3xl sm:text-4xl">
             Matches for your {CATEGORY_LABELS[lost.category].toLowerCase()}
           </h1>
           <p className="text-muted">
@@ -56,7 +56,7 @@ async function Matches({ params, searchParams }: PageProps<"/matches/[token]">) 
         </header>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-muted text-sm font-medium uppercase tracking-wide">Your report</h2>
+          <h2 className="text-lg font-bold">Your report</h2>
           <ReportCard
             report={toPublicReport(lost)}
             footer={
@@ -103,12 +103,12 @@ function ResolvedView({ lost }: { lost: LostWithResolution }) {
         </Alert.Content>
       </Alert>
       <section className="flex flex-col gap-3">
-        <h2 className="text-muted text-sm font-medium uppercase tracking-wide">Your report</h2>
+        <h2 className="text-lg font-bold">Your report</h2>
         <ReportCard report={toPublicReport(lost)} />
       </section>
       {lost.resolvedWith ? (
         <section className="flex flex-col gap-3">
-          <h2 className="text-muted text-sm font-medium uppercase tracking-wide">Returned item</h2>
+          <h2 className="text-lg font-bold">Returned item</h2>
           <ReportCard report={toPublicReport(lost.resolvedWith)} />
         </section>
       ) : null}

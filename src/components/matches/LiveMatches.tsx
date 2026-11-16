@@ -32,7 +32,7 @@ export function LiveMatches({ token, initial, hiddenWeakCount, includeWeak }: Li
   return (
     <section className="flex flex-col gap-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-muted text-sm font-medium uppercase tracking-wide">Best matches first</h2>
+        <h2 className="text-lg font-bold">Best matches first</h2>
         <p className="text-muted text-sm" aria-live="polite">
           {views.length === 0
             ? "No likely matches yet"

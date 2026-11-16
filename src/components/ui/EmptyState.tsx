@@ -7,12 +7,12 @@ type EmptyStateProps = {
   action?: ReactNode;
 };
 
-/** Friendly placeholder for lists with no items yet. */
+/** An empty list drawn as a blank, dashed-outline tag: an invitation to act. */
 export function EmptyState({ title, description, action }: EmptyStateProps) {
   return (
-    <HeroEmptyState className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-default-300 px-6 py-12 text-center">
-      <p className="text-base font-medium">{title}</p>
-      {description ? <p className="text-muted text-sm">{description}</p> : null}
+    <HeroEmptyState className="flex flex-col items-start gap-2 rounded-2xl border-2 border-dashed border-[color:var(--border)] bg-white/40 px-6 py-10">
+      <p className="text-lg font-bold text-[color:var(--ink)]">{title}</p>
+      {description ? <p className="text-muted max-w-prose text-sm">{description}</p> : null}
       {action ? <div className="mt-2">{action}</div> : null}
     </HeroEmptyState>
   );

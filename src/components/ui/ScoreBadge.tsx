@@ -1,20 +1,26 @@
-import { Chip } from "@heroui/react";
 import { matchStrength } from "@/lib/constants";
 
 const STYLE = {
-  strong: { color: "success", label: "Strong match" },
-  possible: { color: "warning", label: "Possible match" },
-  weak: { color: "default", label: "Weak match" },
+  strong: { className: "bg-teal text-white", label: "Strong match" },
+  possible: { className: "bg-[var(--warning-soft)] text-[var(--warning-soft-foreground)]", label: "Possible match" },
+  weak: { className: "bg-white/70 text-[var(--muted)]", label: "Weak match" },
 } as const;
 
-/** "82 · Strong match" chip, coloured by strength. */
+/** Score out of 100 with its strength, like a rubber stamp on the tag. */
 export function ScoreBadge({ score }: { score: number }) {
-  const { color, label } = STYLE[matchStrength(score)];
+  const { className, label } = STYLE[matchStrength(score)];
   return (
-    <Chip color={color} variant="soft" size="md" aria-label={`${label}, score ${score} out of 100`}>
-      <span className="font-semibold tabular-nums">{Math.round(score)}</span>
-      <span aria-hidden> · </span>
-      {label}
-    </Chip>
+    <span
+      className={`inline-flex shrink-0 flex-col items-center rounded-xl px-3 py-1.5 leading-none ${className}`}
+      role="img"
+      aria-label={`${label}, score ${Math.round(score)} out of 100`}
+    >
+      <span className="font-display text-xl tabular-nums" aria-hidden>
+        {Math.round(score)}
+      </span>
+      <span className="mt-1 text-[0.68rem] font-semibold" aria-hidden>
+        {label}
+      </span>
+    </span>
   );
 }
